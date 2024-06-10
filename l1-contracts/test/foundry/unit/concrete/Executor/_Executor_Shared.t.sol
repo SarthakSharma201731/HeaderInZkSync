@@ -34,6 +34,8 @@ contract ExecutorTest is Test {
     IExecutor.StoredBatchInfo internal genesisStoredBatchInfo;
     IExecutor.ProofInput internal proofInput;
 
+    IExecutor.HeaderUpdate internal Header;
+
     function getAdminSelectors() private view returns (bytes4[] memory) {
         bytes4[] memory selectors = new bytes4[](10);
         selectors[0] = admin.setPendingGovernor.selector;
@@ -147,7 +149,8 @@ contract ExecutorTest is Test {
             priorityTxMaxGasLimit: 1000000,
             initialProtocolVersion: 0,
             feeParams: defaultFeeParams(),
-            blobVersionedHashRetriever: blobVersionedHashRetriever
+            blobVersionedHashRetriever: blobVersionedHashRetriever,
+            header: Header
         });
 
         bytes memory diamondInitData = abi.encodeWithSelector(diamondInit.initialize.selector, params);
@@ -199,6 +202,38 @@ contract ExecutorTest is Test {
         uint256[] memory serializedProof;
         proofInput = IExecutor.ProofInput(recursiveAggregationInput, serializedProof);
 
+        bytes32[] memory emptyArray;
+        Header = IExecutor.HeaderUpdate({
+            attestedHeader: IExecutor.BeaconBlockHeader({
+                slot: 0,
+                proposerIndex: 0,
+                parentRoot: bytes32(0),
+                stateRoot: bytes32(0),
+                bodyRoot: bytes32(0)
+            }),
+            finalizedHeader: IExecutor.BeaconBlockHeader({
+                slot: 0,
+                proposerIndex: 0,
+                parentRoot: bytes32(0),
+                stateRoot: bytes32(0),
+                bodyRoot: bytes32(0)
+            }),
+            finalityBranch: emptyArray ,
+            nextSyncCommitteeRoot: bytes32(0),
+            nextSyncCommitteeBranch: emptyArray ,
+            executionStateRoot: bytes32(0),
+            executionStateRootBranch: emptyArray ,
+            blockNumber: 0,
+            blockNumberBranch: emptyArray ,
+            signature: IExecutor.BLSAggregatedSignature({
+                participation: 0,
+                proof: IExecutor.Groth16Proof({
+                    a: [uint256(0), uint256(0)],
+                    b: [[uint256(0), uint256(0)], [uint256(0), uint256(0)]],
+                    c: [uint256(0), uint256(0)]
+                })
+            })
+        });
         genesisStoredBatchInfo = IExecutor.StoredBatchInfo({
             batchNumber: 0,
             batchHash: bytes32(""),
@@ -207,7 +242,8 @@ contract ExecutorTest is Test {
             priorityOperationsHash: keccak256(""),
             l2LogsTreeRoot: DEFAULT_L2_LOGS_TREE_ROOT_HASH,
             timestamp: 0,
-            commitment: bytes32("")
+            commitment: bytes32(""),
+            header: Header
         });
 
         // foundry's default value is 1 for the block's timestamp, it is expected

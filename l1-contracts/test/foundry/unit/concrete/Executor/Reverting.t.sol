@@ -27,11 +27,47 @@ contract RevertingTest is ExecutorTest {
         IExecutor.CommitBatchInfo[] memory commitBatchInfoArray = new IExecutor.CommitBatchInfo[](1);
         commitBatchInfoArray[0] = newCommitBatchInfo;
 
+        IExecutor.HeaderUpdate[] memory headerArray = new IExecutor.HeaderUpdate[](1);
+        headerArray[0] = Header;
+
         vm.prank(validator);
         vm.recordLogs();
-        executor.commitBatches(genesisStoredBatchInfo, commitBatchInfoArray);
+        executor.commitBatches(genesisStoredBatchInfo, commitBatchInfoArray, headerArray);
         Vm.Log[] memory entries = vm.getRecordedLogs();
 
+        //Inital Header Value
+        bytes32[] memory emptyArray;
+        Header = IExecutor.HeaderUpdate({
+            attestedHeader: IExecutor.BeaconBlockHeader({
+                slot: 0,
+                proposerIndex: 0,
+                parentRoot: bytes32(0),
+                stateRoot: bytes32(0),
+                bodyRoot: bytes32(0)
+            }),
+            finalizedHeader: IExecutor.BeaconBlockHeader({
+                slot: 0,
+                proposerIndex: 0,
+                parentRoot: bytes32(0),
+                stateRoot: bytes32(0),
+                bodyRoot: bytes32(0)
+            }),
+            finalityBranch: emptyArray ,
+            nextSyncCommitteeRoot: bytes32(0),
+            nextSyncCommitteeBranch: emptyArray ,
+            executionStateRoot: bytes32(0),
+            executionStateRootBranch: emptyArray ,
+            blockNumber: 0,
+            blockNumberBranch: emptyArray ,
+            signature: IExecutor.BLSAggregatedSignature({
+                participation: 0,
+                proof: IExecutor.Groth16Proof({
+                    a: [uint256(0), uint256(0)],
+                    b: [[uint256(0), uint256(0)], [uint256(0), uint256(0)]],
+                    c: [uint256(0), uint256(0)]
+                })
+            })
+        });
         newStoredBatchInfo = IExecutor.StoredBatchInfo({
             batchNumber: 1,
             batchHash: entries[0].topics[2],
@@ -40,7 +76,8 @@ contract RevertingTest is ExecutorTest {
             priorityOperationsHash: keccak256(""),
             l2LogsTreeRoot: 0,
             timestamp: currentTimestamp,
-            commitment: entries[0].topics[3]
+            commitment: entries[0].topics[3],
+            header: Header
         });
 
         IExecutor.StoredBatchInfo[] memory storedBatchInfoArray = new IExecutor.StoredBatchInfo[](1);

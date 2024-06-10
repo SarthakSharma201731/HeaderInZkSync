@@ -66,6 +66,39 @@ uint256 constant MAX_NUMBER_OF_BLOBS = 2;
 /// @author Matter Labs
 /// @custom:security-contact security@matterlabs.dev
 interface IExecutor is IBase {
+
+    struct BLSAggregatedSignature {
+    uint64 participation;
+    Groth16Proof proof;
+    }
+
+    struct Groth16Proof {
+        uint256[2] a;
+        uint256[2][2] b;
+        uint256[2] c;
+    }
+
+    struct BeaconBlockHeader {
+        uint64 slot;
+        uint64 proposerIndex;
+        bytes32 parentRoot;
+        bytes32 stateRoot;
+        bytes32 bodyRoot;
+    }
+
+    struct HeaderUpdate {
+        BeaconBlockHeader attestedHeader;
+        BeaconBlockHeader finalizedHeader;
+        bytes32[] finalityBranch;
+        bytes32 nextSyncCommitteeRoot;
+        bytes32[] nextSyncCommitteeBranch;
+        bytes32 executionStateRoot;
+        bytes32[] executionStateRootBranch;
+        uint64 blockNumber;
+        bytes32[] blockNumberBranch;
+        BLSAggregatedSignature signature;
+    }
+
     /// @notice Rollup batch stored data
     /// @param batchNumber Rollup batch number
     /// @param batchHash Hash of L2 batch
@@ -84,6 +117,7 @@ interface IExecutor is IBase {
         bytes32 l2LogsTreeRoot;
         uint256 timestamp;
         bytes32 commitment;
+        HeaderUpdate header;
     }
 
     /// @notice Data needed to commit new batch
@@ -129,9 +163,15 @@ interface IExecutor is IBase {
     /// - Storing batch commitments.
     /// @param _lastCommittedBatchData Stored data of the last committed batch.
     /// @param _newBatchesData Data of the new batches to be committed.
+    // function commitBatches(
+    //     StoredBatchInfo calldata _lastCommittedBatchData,
+    //     CommitBatchInfo[] calldata _newBatchesData
+    // ) external;
+
     function commitBatches(
         StoredBatchInfo calldata _lastCommittedBatchData,
-        CommitBatchInfo[] calldata _newBatchesData
+        CommitBatchInfo[] calldata _newBatchesData,
+        HeaderUpdate[] calldata _header
     ) external;
 
     /// @notice Batches commitment verification.

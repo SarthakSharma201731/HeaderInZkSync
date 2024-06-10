@@ -12,6 +12,7 @@ import {AdminFacet} from "../../../../../cache/solpp-generated-contracts/zksync/
 import {GettersFacet} from "../../../../../cache/solpp-generated-contracts/zksync/facets/Getters.sol";
 import {IVerifier} from "../../../../../cache/solpp-generated-contracts/zksync/interfaces/IVerifier.sol";
 import {Diamond} from "../../../../../cache/solpp-generated-contracts/zksync/libraries/Diamond.sol";
+import {IExecutor} from "../../../../../cache/solpp-generated-contracts/zksync/interfaces/IExecutor.sol";
 import {Utils} from "../Utils/Utils.sol";
 
 // solhint-enable max-line-length
@@ -24,7 +25,7 @@ contract UpgradeLogicTest is DiamondCutTest {
     GettersFacet private proxyAsGetters;
     address private governor;
     address private randomSigner;
-
+    IExecutor.HeaderUpdate internal Header;
     function getAdminSelectors() private view returns (bytes4[] memory) {
         bytes4[] memory dcSelectors = new bytes4[](10);
         dcSelectors[0] = adminFacet.setPendingGovernor.selector;
@@ -90,7 +91,8 @@ contract UpgradeLogicTest is DiamondCutTest {
                 priorityTxMaxPubdata: 99_000,
                 minimalL2GasPrice: 250_000_000
             }),
-            blobVersionedHashRetriever: address(0)
+            blobVersionedHashRetriever: address(0),
+            header: Header
         });
 
         bytes memory diamondInitCalldata = abi.encodeWithSelector(diamondInit.initialize.selector, params);

@@ -16,6 +16,7 @@ import {IZkSync} from "../../../../../../cache/solpp-generated-contracts/zksync/
 import {DiamondInit} from "../../../../../../cache/solpp-generated-contracts/zksync/DiamondInit.sol";
 import {IVerifier} from "../../../../../../cache/solpp-generated-contracts/zksync/interfaces/IVerifier.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import {IExecutor} from "../../../../../../cache/solpp-generated-contracts/zksync/interfaces/IExecutor.sol";
 
 contract L1WethBridgeTest is Test {
     address internal owner;
@@ -23,6 +24,8 @@ contract L1WethBridgeTest is Test {
     L1WethBridge internal bridgeProxy;
     WETH9 internal l1Weth;
     bytes4 internal functionSignature = 0x6c0960f9;
+
+    IExecutor.HeaderUpdate internal Header;
 
     function defaultFeeParams() private pure returns (FeeParams memory feeParams) {
         feeParams = FeeParams({
@@ -46,6 +49,39 @@ contract L1WethBridgeTest is Test {
         bytes8 dummyHash = 0x1234567890123456;
         address dummyAddress = makeAddr("dummyAddress");
 
+        bytes32[] memory emptyArray;
+        Header = IExecutor.HeaderUpdate({
+            attestedHeader: IExecutor.BeaconBlockHeader({
+                slot: 0,
+                proposerIndex: 0,
+                parentRoot: bytes32(0),
+                stateRoot: bytes32(0),
+                bodyRoot: bytes32(0)
+            }),
+            finalizedHeader: IExecutor.BeaconBlockHeader({
+                slot: 0,
+                proposerIndex: 0,
+                parentRoot: bytes32(0),
+                stateRoot: bytes32(0),
+                bodyRoot: bytes32(0)
+            }),
+            finalityBranch: emptyArray ,
+            nextSyncCommitteeRoot: bytes32(0),
+            nextSyncCommitteeBranch: emptyArray ,
+            executionStateRoot: bytes32(0),
+            executionStateRootBranch: emptyArray ,
+            blockNumber: 0,
+            blockNumberBranch: emptyArray ,
+            signature: IExecutor.BLSAggregatedSignature({
+                participation: 0,
+                proof: IExecutor.Groth16Proof({
+                    a: [uint256(0), uint256(0)],
+                    b: [[uint256(0), uint256(0)], [uint256(0), uint256(0)]],
+                    c: [uint256(0), uint256(0)]
+                })
+            })
+        });
+
         DiamondInit.InitializeData memory params = DiamondInit.InitializeData({
             verifier: IVerifier(dummyAddress), // verifier
             governor: owner,
@@ -64,7 +100,8 @@ contract L1WethBridgeTest is Test {
             priorityTxMaxGasLimit: 10000000,
             initialProtocolVersion: 0,
             feeParams: defaultFeeParams(),
-            blobVersionedHashRetriever: address(0)
+            blobVersionedHashRetriever: address(0),
+            header: Header
         });
 
         bytes memory diamondInitData = abi.encodeWithSelector(diamondInit.initialize.selector, params);

@@ -47,6 +47,7 @@ contract DiamondInit is Base {
         uint256 initialProtocolVersion;
         FeeParams feeParams;
         address blobVersionedHashRetriever;
+        IExecutor.HeaderUpdate header;
     }
 
     /// @dev Initialize the implementation to prevent any possibility of a Parity hack.
@@ -74,7 +75,8 @@ contract DiamondInit is Base {
             EMPTY_STRING_KECCAK,
             DEFAULT_L2_LOGS_TREE_ROOT_HASH,
             0,
-            _initalizeData.genesisBatchCommitment
+            _initalizeData.genesisBatchCommitment,
+            _initalizeData.header
         );
 
         s.storedBatchHashes[0] = keccak256(abi.encode(storedBatchZero));

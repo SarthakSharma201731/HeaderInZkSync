@@ -17,10 +17,13 @@ contract CommittingTest is ExecutorTest {
         IExecutor.StoredBatchInfo memory wrongGenesisStoredBatchInfo = genesisStoredBatchInfo;
         wrongGenesisStoredBatchInfo.timestamp = 1000;
 
+        IExecutor.HeaderUpdate[] memory headerArray = new IExecutor.HeaderUpdate[](1);
+        headerArray[0] = Header;
+
         vm.prank(validator);
 
         vm.expectRevert(bytes.concat("i"));
-        executor.commitBatches(wrongGenesisStoredBatchInfo, newCommitBatchInfoArray);
+        executor.commitBatches(wrongGenesisStoredBatchInfo, newCommitBatchInfoArray, headerArray);
     }
 
     function test_RevertWhen_ComittingWithWrongOrderOfBatches() public {
@@ -30,10 +33,13 @@ contract CommittingTest is ExecutorTest {
         IExecutor.CommitBatchInfo[] memory wrongNewCommitBatchInfoArray = new IExecutor.CommitBatchInfo[](1);
         wrongNewCommitBatchInfoArray[0] = wrongNewCommitBatchInfo;
 
+        IExecutor.HeaderUpdate[] memory headerArray = new IExecutor.HeaderUpdate[](1);
+        headerArray[0] = Header;
+
         vm.prank(validator);
 
         vm.expectRevert(bytes.concat("f"));
-        executor.commitBatches(genesisStoredBatchInfo, wrongNewCommitBatchInfoArray);
+        executor.commitBatches(genesisStoredBatchInfo, wrongNewCommitBatchInfoArray, headerArray);
     }
 
     function test_RevertWhen_CommittingWithWrongNewBatchTimestamp() public {
@@ -53,10 +59,13 @@ contract CommittingTest is ExecutorTest {
         IExecutor.CommitBatchInfo[] memory wrongNewCommitBatchInfoArray = new IExecutor.CommitBatchInfo[](1);
         wrongNewCommitBatchInfoArray[0] = wrongNewCommitBatchInfo;
 
+        IExecutor.HeaderUpdate[] memory headerArray = new IExecutor.HeaderUpdate[](1);
+        headerArray[0] = Header;
+
         vm.prank(validator);
 
         vm.expectRevert(bytes.concat("tb"));
-        executor.commitBatches(genesisStoredBatchInfo, wrongNewCommitBatchInfoArray);
+        executor.commitBatches(genesisStoredBatchInfo, wrongNewCommitBatchInfoArray, headerArray);
     }
 
     function test_RevertWhen_CommittingWithTooSmallNewBatchTimestamp() public {
@@ -76,10 +85,13 @@ contract CommittingTest is ExecutorTest {
         IExecutor.CommitBatchInfo[] memory wrongNewCommitBatchInfoArray = new IExecutor.CommitBatchInfo[](1);
         wrongNewCommitBatchInfoArray[0] = wrongNewCommitBatchInfo;
 
+        IExecutor.HeaderUpdate[] memory headerArray = new IExecutor.HeaderUpdate[](1);
+        headerArray[0] = Header;
+
         vm.prank(validator);
 
         vm.expectRevert(bytes.concat("h1"));
-        executor.commitBatches(genesisStoredBatchInfo, wrongNewCommitBatchInfoArray);
+        executor.commitBatches(genesisStoredBatchInfo, wrongNewCommitBatchInfoArray, headerArray);
     }
 
     function test_RevertWhen_CommittingTooBigLastL2BatchTimestamp() public {
@@ -99,10 +111,13 @@ contract CommittingTest is ExecutorTest {
         IExecutor.CommitBatchInfo[] memory wrongNewCommitBatchInfoArray = new IExecutor.CommitBatchInfo[](1);
         wrongNewCommitBatchInfoArray[0] = wrongNewCommitBatchInfo;
 
+        IExecutor.HeaderUpdate[] memory headerArray = new IExecutor.HeaderUpdate[](1);
+        headerArray[0] = Header;
+
         vm.prank(validator);
 
         vm.expectRevert(bytes.concat("h2"));
-        executor.commitBatches(genesisStoredBatchInfo, wrongNewCommitBatchInfoArray);
+        executor.commitBatches(genesisStoredBatchInfo, wrongNewCommitBatchInfoArray, headerArray);
     }
 
     function test_RevertWhen_CommittingWithWrongPreviousBatchHash() public {
@@ -121,10 +136,13 @@ contract CommittingTest is ExecutorTest {
         IExecutor.CommitBatchInfo[] memory wrongNewCommitBatchInfoArray = new IExecutor.CommitBatchInfo[](1);
         wrongNewCommitBatchInfoArray[0] = wrongNewCommitBatchInfo;
 
+        IExecutor.HeaderUpdate[] memory headerArray = new IExecutor.HeaderUpdate[](1);
+        headerArray[0] = Header;
+
         vm.prank(validator);
 
         vm.expectRevert(bytes.concat("l"));
-        executor.commitBatches(genesisStoredBatchInfo, wrongNewCommitBatchInfoArray);
+        executor.commitBatches(genesisStoredBatchInfo, wrongNewCommitBatchInfoArray, headerArray);
     }
 
     function test_RevertWhen_CommittingWithoutProcessingSystemContextLog() public {
@@ -137,10 +155,13 @@ contract CommittingTest is ExecutorTest {
         IExecutor.CommitBatchInfo[] memory wrongNewCommitBatchInfoArray = new IExecutor.CommitBatchInfo[](1);
         wrongNewCommitBatchInfoArray[0] = wrongNewCommitBatchInfo;
 
+        IExecutor.HeaderUpdate[] memory headerArray = new IExecutor.HeaderUpdate[](1);
+        headerArray[0] = Header;
+
         vm.prank(validator);
 
         vm.expectRevert(bytes.concat("b7"));
-        executor.commitBatches(genesisStoredBatchInfo, wrongNewCommitBatchInfoArray);
+        executor.commitBatches(genesisStoredBatchInfo, wrongNewCommitBatchInfoArray, headerArray);
     }
 
     function test_RevertWhen_CommittingWithProcessingSystemContextLogTwice() public {
@@ -162,10 +183,13 @@ contract CommittingTest is ExecutorTest {
         IExecutor.CommitBatchInfo[] memory wrongNewCommitBatchInfoArray = new IExecutor.CommitBatchInfo[](1);
         wrongNewCommitBatchInfoArray[0] = wrongNewCommitBatchInfo;
 
+        IExecutor.HeaderUpdate[] memory headerArray = new IExecutor.HeaderUpdate[](1);
+        headerArray[0] = Header;
+
         vm.prank(validator);
 
         vm.expectRevert(bytes.concat("kp"));
-        executor.commitBatches(genesisStoredBatchInfo, wrongNewCommitBatchInfoArray);
+        executor.commitBatches(genesisStoredBatchInfo, wrongNewCommitBatchInfoArray, headerArray);
     }
 
     function test_RevertWhen_UnexpectedL2ToL1Log() public {
@@ -184,10 +208,13 @@ contract CommittingTest is ExecutorTest {
         IExecutor.CommitBatchInfo[] memory wrongNewCommitBatchInfoArray = new IExecutor.CommitBatchInfo[](1);
         wrongNewCommitBatchInfoArray[0] = wrongNewCommitBatchInfo;
 
+        IExecutor.HeaderUpdate[] memory headerArray = new IExecutor.HeaderUpdate[](1);
+        headerArray[0] = Header;
+
         vm.prank(validator);
 
         vm.expectRevert(bytes.concat("sc"));
-        executor.commitBatches(genesisStoredBatchInfo, wrongNewCommitBatchInfoArray);
+        executor.commitBatches(genesisStoredBatchInfo, wrongNewCommitBatchInfoArray, headerArray);
     }
 
     function test_RevertWhen_CommittingWithWrongCanonicalTxHash() public {
@@ -206,10 +233,13 @@ contract CommittingTest is ExecutorTest {
         IExecutor.CommitBatchInfo[] memory wrongNewCommitBatchInfoArray = new IExecutor.CommitBatchInfo[](1);
         wrongNewCommitBatchInfoArray[0] = wrongNewCommitBatchInfo;
 
+        IExecutor.HeaderUpdate[] memory headerArray = new IExecutor.HeaderUpdate[](1);
+        headerArray[0] = Header;
+
         vm.prank(validator);
 
         vm.expectRevert(bytes.concat("t"));
-        executor.commitBatches(genesisStoredBatchInfo, wrongNewCommitBatchInfoArray);
+        executor.commitBatches(genesisStoredBatchInfo, wrongNewCommitBatchInfoArray, headerArray);
     }
 
     function test_RevertWhen_CommittingWithWrongNumberOfLayer1txs() public {
@@ -228,10 +258,13 @@ contract CommittingTest is ExecutorTest {
         IExecutor.CommitBatchInfo[] memory wrongNewCommitBatchInfoArray = new IExecutor.CommitBatchInfo[](1);
         wrongNewCommitBatchInfoArray[0] = wrongNewCommitBatchInfo;
 
+        IExecutor.HeaderUpdate[] memory headerArray = new IExecutor.HeaderUpdate[](1);
+        headerArray[0] = Header;
+
         vm.prank(validator);
 
         vm.expectRevert(bytes.concat("ta"));
-        executor.commitBatches(genesisStoredBatchInfo, wrongNewCommitBatchInfoArray);
+        executor.commitBatches(genesisStoredBatchInfo, wrongNewCommitBatchInfoArray, headerArray);
     }
 
     function test_RevertWhen_CommittingWithUnknownSystemLogKey() public {
@@ -247,10 +280,13 @@ contract CommittingTest is ExecutorTest {
         IExecutor.CommitBatchInfo[] memory wrongNewCommitBatchInfoArray = new IExecutor.CommitBatchInfo[](1);
         wrongNewCommitBatchInfoArray[0] = wrongNewCommitBatchInfo;
 
+        IExecutor.HeaderUpdate[] memory headerArray = new IExecutor.HeaderUpdate[](1);
+        headerArray[0] = Header;
+
         vm.prank(validator);
 
         vm.expectRevert(bytes.concat("ul"));
-        executor.commitBatches(genesisStoredBatchInfo, wrongNewCommitBatchInfoArray);
+        executor.commitBatches(genesisStoredBatchInfo, wrongNewCommitBatchInfoArray, headerArray);
     }
 
     function test_RevertWhen_SystemLogIsFromIncorrectAddress() public {
@@ -285,10 +321,13 @@ contract CommittingTest is ExecutorTest {
             IExecutor.CommitBatchInfo[] memory wrongNewCommitBatchInfoArray = new IExecutor.CommitBatchInfo[](1);
             wrongNewCommitBatchInfoArray[0] = wrongNewCommitBatchInfo;
 
+            IExecutor.HeaderUpdate[] memory headerArray = new IExecutor.HeaderUpdate[](1);
+            headerArray[0] = Header;
+
             vm.prank(validator);
 
             vm.expectRevert(errors[i]);
-            executor.commitBatches(genesisStoredBatchInfo, wrongNewCommitBatchInfoArray);
+            executor.commitBatches(genesisStoredBatchInfo, wrongNewCommitBatchInfoArray, headerArray);
         }
     }
 
@@ -303,10 +342,13 @@ contract CommittingTest is ExecutorTest {
             IExecutor.CommitBatchInfo[] memory wrongNewCommitBatchInfoArray = new IExecutor.CommitBatchInfo[](1);
             wrongNewCommitBatchInfoArray[0] = wrongNewCommitBatchInfo;
 
+            IExecutor.HeaderUpdate[] memory headerArray = new IExecutor.HeaderUpdate[](1);
+            headerArray[0] = Header;
+
             vm.prank(validator);
 
             vm.expectRevert(bytes.concat("b7"));
-            executor.commitBatches(genesisStoredBatchInfo, wrongNewCommitBatchInfoArray);
+            executor.commitBatches(genesisStoredBatchInfo, wrongNewCommitBatchInfoArray, headerArray);
         }
     }
 
@@ -332,6 +374,8 @@ contract CommittingTest is ExecutorTest {
             bytes32(uint256(0xbeef))
         );
 
+        IExecutor.HeaderUpdate memory correctHeader = Header;
+
         bytes32[] memory blobHashes = new bytes32[](2);
         blobHashes[0] = 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563;
 
@@ -340,6 +384,7 @@ contract CommittingTest is ExecutorTest {
 
         bytes32 expectedBatchCommitment = Utils.createBatchCommitment(
             correctNewCommitBatchInfo,
+            correctHeader,
             bytes32(""),
             blobCommitments,
             blobHashes
@@ -348,11 +393,14 @@ contract CommittingTest is ExecutorTest {
         IExecutor.CommitBatchInfo[] memory correctCommitBatchInfoArray = new IExecutor.CommitBatchInfo[](1);
         correctCommitBatchInfoArray[0] = correctNewCommitBatchInfo;
 
+        IExecutor.HeaderUpdate[] memory headerArray = new IExecutor.HeaderUpdate[](1);
+        headerArray[0] = Header;
+
         vm.prank(validator);
 
         vm.recordLogs();
 
-        executor.commitBatches(genesisStoredBatchInfo, correctCommitBatchInfoArray);
+        executor.commitBatches(genesisStoredBatchInfo, correctCommitBatchInfoArray, headerArray);
 
         Vm.Log[] memory entries = vm.getRecordedLogs();
 
@@ -403,11 +451,14 @@ contract CommittingTest is ExecutorTest {
         correctCommitBatchInfoArray[0] = correctNewCommitBatchInfo;
         correctCommitBatchInfoArray[0].pubdataCommitments = pubdataCommitment;
 
+        IExecutor.HeaderUpdate[] memory headerArray = new IExecutor.HeaderUpdate[](1);
+        headerArray[0] = Header;
+
         vm.prank(validator);
 
         vm.recordLogs();
 
-        executor.commitBatches(genesisStoredBatchInfo, correctCommitBatchInfoArray);
+        executor.commitBatches(genesisStoredBatchInfo, correctCommitBatchInfoArray, headerArray);
 
         Vm.Log[] memory entries = vm.getRecordedLogs();
 
@@ -476,11 +527,14 @@ contract CommittingTest is ExecutorTest {
         correctCommitBatchInfoArray[0] = correctNewCommitBatchInfo;
         correctCommitBatchInfoArray[0].pubdataCommitments = pubdataCommitment;
 
+        IExecutor.HeaderUpdate[] memory headerArray = new IExecutor.HeaderUpdate[](1);
+        headerArray[0] = Header;
+
         vm.prank(validator);
 
         vm.recordLogs();
 
-        executor.commitBatches(genesisStoredBatchInfo, correctCommitBatchInfoArray);
+        executor.commitBatches(genesisStoredBatchInfo, correctCommitBatchInfoArray, headerArray);
 
         Vm.Log[] memory entries = vm.getRecordedLogs();
 
@@ -501,10 +555,13 @@ contract CommittingTest is ExecutorTest {
         correctCommitBatchInfoArray[0] = correctNewCommitBatchInfo;
         correctCommitBatchInfoArray[1] = correctNewCommitBatchInfo;
 
+        IExecutor.HeaderUpdate[] memory headerArray = new IExecutor.HeaderUpdate[](1);
+        headerArray[0] = Header;
+
         vm.prank(validator);
 
         vm.expectRevert(bytes("e4"));
-        executor.commitBatches(genesisStoredBatchInfo, correctCommitBatchInfoArray);
+        executor.commitBatches(genesisStoredBatchInfo, correctCommitBatchInfoArray, headerArray);
     }
 
     function test_RevertWhen_EmptyPubdataCommitments() public {
@@ -525,10 +582,13 @@ contract CommittingTest is ExecutorTest {
         correctCommitBatchInfoArray[0] = correctNewCommitBatchInfo;
         correctCommitBatchInfoArray[0].pubdataCommitments = pubdataCommitment;
 
+        IExecutor.HeaderUpdate[] memory headerArray = new IExecutor.HeaderUpdate[](1);
+        headerArray[0] = Header;
+
         vm.prank(validator);
 
         vm.expectRevert(bytes("pl"));
-        executor.commitBatches(genesisStoredBatchInfo, correctCommitBatchInfoArray);
+        executor.commitBatches(genesisStoredBatchInfo, correctCommitBatchInfoArray, headerArray);
     }
 
     function test_RevertWhen_PartialPubdataCommitment() public {
@@ -550,10 +610,13 @@ contract CommittingTest is ExecutorTest {
         correctCommitBatchInfoArray[0] = correctNewCommitBatchInfo;
         correctCommitBatchInfoArray[0].pubdataCommitments = pubdataCommitment;
 
+        IExecutor.HeaderUpdate[] memory headerArray = new IExecutor.HeaderUpdate[](1);
+        headerArray[0] = Header;
+
         vm.prank(validator);
 
         vm.expectRevert(bytes("bs"));
-        executor.commitBatches(genesisStoredBatchInfo, correctCommitBatchInfoArray);
+        executor.commitBatches(genesisStoredBatchInfo, correctCommitBatchInfoArray, headerArray);
     }
 
     function test_RevertWhen_TooManyPubdataCommitments() public {
@@ -575,10 +638,13 @@ contract CommittingTest is ExecutorTest {
         correctCommitBatchInfoArray[0] = correctNewCommitBatchInfo;
         correctCommitBatchInfoArray[0].pubdataCommitments = pubdataCommitment;
 
+        IExecutor.HeaderUpdate[] memory headerArray = new IExecutor.HeaderUpdate[](1);
+        headerArray[0] = Header;
+
         vm.prank(validator);
 
         vm.expectRevert(bytes("bd"));
-        executor.commitBatches(genesisStoredBatchInfo, correctCommitBatchInfoArray);
+        executor.commitBatches(genesisStoredBatchInfo, correctCommitBatchInfoArray, headerArray);
     }
 
     function test_RevertWhen_NotEnoughPubdataCommitments() public {
@@ -619,10 +685,13 @@ contract CommittingTest is ExecutorTest {
         correctCommitBatchInfoArray[0] = correctNewCommitBatchInfo;
         correctCommitBatchInfoArray[0].pubdataCommitments = pubdataCommitment;
 
+        IExecutor.HeaderUpdate[] memory headerArray = new IExecutor.HeaderUpdate[](1);
+        headerArray[0] = Header;
+
         vm.prank(validator);
 
         vm.expectRevert(bytes("lh"));
-        executor.commitBatches(genesisStoredBatchInfo, correctCommitBatchInfoArray);
+        executor.commitBatches(genesisStoredBatchInfo, correctCommitBatchInfoArray, headerArray);
 
         vm.clearMockedCalls();
     }
@@ -656,10 +725,13 @@ contract CommittingTest is ExecutorTest {
         correctCommitBatchInfoArray[0] = correctNewCommitBatchInfo;
         correctCommitBatchInfoArray[0].pubdataCommitments = pubdataCommitment;
 
+        IExecutor.HeaderUpdate[] memory headerArray = new IExecutor.HeaderUpdate[](1);
+        headerArray[0] = Header;
+
         vm.prank(validator);
 
         vm.expectRevert(bytes("vh"));
-        executor.commitBatches(genesisStoredBatchInfo, correctCommitBatchInfoArray);
+        executor.commitBatches(genesisStoredBatchInfo, correctCommitBatchInfoArray, headerArray);
 
         vm.clearMockedCalls();
     }
@@ -701,10 +773,13 @@ contract CommittingTest is ExecutorTest {
         correctCommitBatchInfoArray[0] = correctNewCommitBatchInfo;
         correctCommitBatchInfoArray[0].pubdataCommitments = pubdataCommitment;
 
+        IExecutor.HeaderUpdate[] memory headerArray = new IExecutor.HeaderUpdate[](1);
+        headerArray[0] = Header;
+
         vm.prank(validator);
 
         vm.expectRevert(bytes("lh"));
-        executor.commitBatches(genesisStoredBatchInfo, correctCommitBatchInfoArray);
+        executor.commitBatches(genesisStoredBatchInfo, correctCommitBatchInfoArray, headerArray);
 
         vm.clearMockedCalls();
     }
@@ -764,10 +839,13 @@ contract CommittingTest is ExecutorTest {
         correctCommitBatchInfoArray[0] = correctNewCommitBatchInfo;
         correctCommitBatchInfoArray[0].pubdataCommitments = pubdataCommitment;
 
+        IExecutor.HeaderUpdate[] memory headerArray = new IExecutor.HeaderUpdate[](1);
+        headerArray[0] = Header;
+
         vm.prank(validator);
 
         vm.expectRevert(bytes("bh"));
-        executor.commitBatches(genesisStoredBatchInfo, correctCommitBatchInfoArray);
+        executor.commitBatches(genesisStoredBatchInfo, correctCommitBatchInfoArray, headerArray);
     }
 
     function test_RevertWhen_SecondBlobLinearHashNotZeroWithEmptyCommitment() public {
@@ -814,10 +892,13 @@ contract CommittingTest is ExecutorTest {
         correctCommitBatchInfoArray[0] = correctNewCommitBatchInfo;
         correctCommitBatchInfoArray[0].pubdataCommitments = pubdataCommitment;
 
+        IExecutor.HeaderUpdate[] memory headerArray = new IExecutor.HeaderUpdate[](1);
+        headerArray[0] = Header;
+
         vm.prank(validator);
 
         vm.expectRevert(bytes("bh"));
-        executor.commitBatches(genesisStoredBatchInfo, correctCommitBatchInfoArray);
+        executor.commitBatches(genesisStoredBatchInfo, correctCommitBatchInfoArray, headerArray);
 
         vm.clearMockedCalls();
     }

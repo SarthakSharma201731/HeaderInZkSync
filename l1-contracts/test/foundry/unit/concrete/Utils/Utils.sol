@@ -13,6 +13,7 @@ address constant L2_TO_L1_MESSENGER = 0x0000000000000000000000000000000000008008
 address constant PUBDATA_PUBLISHER_ADDRESS = 0x0000000000000000000000000000000000008011;
 
 library Utils {
+
     function packBatchTimestampAndBlockTimestamp(
         uint256 batchTimestamp,
         uint256 blockTimestamp
@@ -84,6 +85,9 @@ library Utils {
     }
 
     function createStoredBatchInfo() public pure returns (IExecutor.StoredBatchInfo memory) {
+        //Inital Header Value
+        bytes32[] memory emptyArray;
+
         return
             IExecutor.StoredBatchInfo({
                 batchNumber: 0,
@@ -93,7 +97,38 @@ library Utils {
                 priorityOperationsHash: keccak256(""),
                 l2LogsTreeRoot: DEFAULT_L2_LOGS_TREE_ROOT_HASH,
                 timestamp: 0,
-                commitment: bytes32("")
+                commitment: bytes32(""),
+                header: IExecutor.HeaderUpdate({
+                    attestedHeader: IExecutor.BeaconBlockHeader({
+                        slot: 0,
+                        proposerIndex: 0,
+                        parentRoot: bytes32(0),
+                        stateRoot: bytes32(0),
+                        bodyRoot: bytes32(0)
+                    }),
+                    finalizedHeader: IExecutor.BeaconBlockHeader({
+                        slot: 0,
+                        proposerIndex: 0,
+                        parentRoot: bytes32(0),
+                        stateRoot: bytes32(0),
+                        bodyRoot: bytes32(0)
+                    }),
+                    finalityBranch: emptyArray ,
+                    nextSyncCommitteeRoot: bytes32(0),
+                    nextSyncCommitteeBranch: emptyArray ,
+                    executionStateRoot: bytes32(0),
+                    executionStateRootBranch: emptyArray ,
+                    blockNumber: 0,
+                    blockNumberBranch: emptyArray ,
+                    signature: IExecutor.BLSAggregatedSignature({
+                        participation: 0,
+                        proof: IExecutor.Groth16Proof({
+                            a: [uint256(0), uint256(0)],
+                            b: [[uint256(0), uint256(0)], [uint256(0), uint256(0)]],
+                            c: [uint256(0), uint256(0)]
+                        })
+                    })
+                })
             });
     }
 
@@ -167,6 +202,7 @@ library Utils {
 
     function createBatchCommitment(
         IExecutor.CommitBatchInfo calldata _newBatchData,
+        IExecutor.HeaderUpdate calldata _header,
         bytes32 _stateDiffHash,
         bytes32[] memory _blobCommitments,
         bytes32[] memory _blobHashes
@@ -174,7 +210,7 @@ library Utils {
         bytes32 passThroughDataHash = keccak256(_batchPassThroughData(_newBatchData));
         bytes32 metadataHash = keccak256(_batchMetaParameters());
         bytes32 auxiliaryOutputHash = keccak256(
-            _batchAuxiliaryOutput(_newBatchData, _stateDiffHash, _blobCommitments, _blobHashes)
+            _batchAuxiliaryOutput(_newBatchData, _header, _stateDiffHash, _blobCommitments, _blobHashes)
         );
 
         return keccak256(abi.encode(passThroughDataHash, metadataHash, auxiliaryOutputHash));
@@ -198,6 +234,7 @@ library Utils {
 
     function _batchAuxiliaryOutput(
         IExecutor.CommitBatchInfo calldata _batch,
+        IExecutor.HeaderUpdate calldata _header,
         bytes32 _stateDiffHash,
         bytes32[] memory _blobCommitments,
         bytes32[] memory _blobHashes
@@ -218,7 +255,8 @@ library Utils {
                 _blobHashes[0],
                 _blobCommitments[0],
                 _blobHashes[1],
-                _blobCommitments[1]
+                _blobCommitments[1],
+                _header
             );
     }
 }

@@ -10,6 +10,7 @@ import {AdminFacet} from "solpp/zksync/facets/Admin.sol";
 import {Base} from "solpp/zksync/facets/Base.sol";
 import {Governance} from "solpp/governance/Governance.sol";
 import {IVerifier} from "../../../../../cache/solpp-generated-contracts/zksync/interfaces/IVerifier.sol";
+import {IExecutor} from "../../../../../cache/solpp-generated-contracts/zksync/interfaces/IExecutor.sol";
 
 contract GettersMock is Base {
     function getFeeParams() public returns (FeeParams memory) {
@@ -25,6 +26,7 @@ contract AdminTest is Test {
     AdminFacet internal adminFacet;
     AdminFacet internal proxyAsAdmin;
     GettersMock internal proxyAsGettersMock;
+    IExecutor.HeaderUpdate internal Header;
 
     function getAdminSelectors() private view returns (bytes4[] memory) {
         bytes4[] memory dcSelectors = new bytes4[](11);
@@ -60,6 +62,40 @@ contract AdminTest is Test {
             recursionCircuitsSetVksHash: 0
         });
 
+       bytes32[] memory emptyArray;
+        Header = IExecutor.HeaderUpdate({
+            attestedHeader: IExecutor.BeaconBlockHeader({
+                slot: 0,
+                proposerIndex: 0,
+                parentRoot: bytes32(0),
+                stateRoot: bytes32(0),
+                bodyRoot: bytes32(0)
+            }),
+            finalizedHeader: IExecutor.BeaconBlockHeader({
+                slot: 0,
+                proposerIndex: 0,
+                parentRoot: bytes32(0),
+                stateRoot: bytes32(0),
+                bodyRoot: bytes32(0)
+            }),
+            finalityBranch: emptyArray ,
+            nextSyncCommitteeRoot: bytes32(0),
+            nextSyncCommitteeBranch: emptyArray ,
+            executionStateRoot: bytes32(0),
+            executionStateRootBranch: emptyArray ,
+            blockNumber: 0,
+            blockNumberBranch: emptyArray ,
+            signature: IExecutor.BLSAggregatedSignature({
+                participation: 0,
+                proof: IExecutor.Groth16Proof({
+                    a: [uint256(0), uint256(0)],
+                    b: [[uint256(0), uint256(0)], [uint256(0), uint256(0)]],
+                    c: [uint256(0), uint256(0)]
+                })
+            })
+        });
+
+
         DiamondInit.InitializeData memory params = DiamondInit.InitializeData({
             verifier: IVerifier(0x03752D8252d67f99888E741E3fB642803B29B155), // verifier
             governor: governor,
@@ -81,7 +117,8 @@ contract AdminTest is Test {
                 priorityTxMaxPubdata: 99_000,
                 minimalL2GasPrice: 250_000_000
             }),
-            blobVersionedHashRetriever: address(0)
+            blobVersionedHashRetriever: address(0),
+            header: Header
         });
 
         adminFacet = new AdminFacet();
