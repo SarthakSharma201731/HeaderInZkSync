@@ -67,12 +67,16 @@ contract ValidatorTimelockTest is Test {
 
         IExecutor.StoredBatchInfo memory storedBatch = Utils.createStoredBatchInfo();
         IExecutor.CommitBatchInfo memory batchToCommit = Utils.createCommitBatchInfo();
+        IExecutor.HeaderUpdate memory header = Utils.createHeaderUpdate();
 
         IExecutor.CommitBatchInfo[] memory batchesToCommit = new IExecutor.CommitBatchInfo[](1);
         batchesToCommit[0] = batchToCommit;
 
+        IExecutor.HeaderUpdate[] memory headerArr = new IExecutor.HeaderUpdate[](1);
+        headerArr[0] = header;
+
         vm.prank(alice);
-        validator.commitBatches(storedBatch, batchesToCommit);
+        validator.commitBatches(storedBatch, batchesToCommit, headerArr);
     }
 
     function test_addValidator_revertWhenNotOwner() public {
@@ -112,12 +116,16 @@ contract ValidatorTimelockTest is Test {
     function test_validatorCanMakeCall_revertWhenNotValidator() public {
         IExecutor.StoredBatchInfo memory storedBatch = Utils.createStoredBatchInfo();
         IExecutor.CommitBatchInfo memory batchToCommit = Utils.createCommitBatchInfo();
+        IExecutor.HeaderUpdate memory header = Utils.createHeaderUpdate();
 
         IExecutor.CommitBatchInfo[] memory batchesToCommit = new IExecutor.CommitBatchInfo[](1);
         batchesToCommit[0] = batchToCommit;
 
+        IExecutor.HeaderUpdate[] memory headerArr = new IExecutor.HeaderUpdate[](1);
+        headerArr[0] = header;
+
         vm.prank(bob);
         vm.expectRevert(bytes("8h"));
-        validator.commitBatches(storedBatch, batchesToCommit);
+        validator.commitBatches(storedBatch, batchesToCommit, headerArr);
     }
 }

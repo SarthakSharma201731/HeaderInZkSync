@@ -49,7 +49,8 @@ contract DummyExecutor is IExecutor {
 
     function commitBatches(
         StoredBatchInfo calldata _lastCommittedBatchData,
-        CommitBatchInfo[] calldata _newBatchesData
+        CommitBatchInfo[] calldata _newBatchesData,
+        HeaderUpdate[] calldata
     ) external {
         require(!shouldRevertOnCommitBatches, "DummyExecutor: shouldRevertOnCommitBatches");
         require(

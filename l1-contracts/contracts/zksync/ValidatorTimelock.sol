@@ -99,7 +99,8 @@ contract ValidatorTimelock is IExecutor, Ownable2Step {
     /// a call to the zkSync contract with the same calldata.
     function commitBatches(
         StoredBatchInfo calldata,
-        CommitBatchInfo[] calldata _newBatchesData
+        CommitBatchInfo[] calldata _newBatchesData,
+        HeaderUpdate[] calldata
     ) external onlyValidator {
         unchecked {
             // This contract is only a temporary solution, that hopefully will be disabled until 2106 year, so...

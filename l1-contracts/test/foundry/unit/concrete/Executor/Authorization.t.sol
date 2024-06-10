@@ -8,12 +8,12 @@ import {IExecutor} from "../../../../../cache/solpp-generated-contracts/zksync/i
 contract AuthorizationTest is ExecutorTest {
     IExecutor.StoredBatchInfo private storedBatchInfo;
     IExecutor.CommitBatchInfo private commitBatchInfo;
-    IExecutor.HeaderUpdate private Header;
+    IExecutor.HeaderUpdate private nHeader;
 
     function setUp() public {
         //Inital Header Value
         bytes32[] memory emptyArray;
-        Header = IExecutor.HeaderUpdate({
+        nHeader = IExecutor.HeaderUpdate({
             attestedHeader: IExecutor.BeaconBlockHeader({
                 slot: 0,
                 proposerIndex: 0,
@@ -54,7 +54,7 @@ contract AuthorizationTest is ExecutorTest {
             l2LogsTreeRoot: Utils.randomBytes32("l2LogsTreeRoot"),
             timestamp: 0,
             commitment: Utils.randomBytes32("commitment"),
-            header: Header
+            header: nHeader
         });
 
         commitBatchInfo = IExecutor.CommitBatchInfo({
@@ -76,7 +76,7 @@ contract AuthorizationTest is ExecutorTest {
         commitBatchInfoArray[0] = commitBatchInfo;
 
         IExecutor.HeaderUpdate[] memory headerArray = new IExecutor.HeaderUpdate[](1);
-        headerArray[0] = Header;
+        headerArray[0] = nHeader;
 
         vm.prank(randomSigner);
 
