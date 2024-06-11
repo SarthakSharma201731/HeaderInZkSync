@@ -305,6 +305,7 @@ contract ExecutorFacet is Base, IExecutor {
 
         // Save root hash of L2 -> L1 logs tree
         s.l2LogsRootHashes[currentBatchNumber] = _storedBatch.l2LogsTreeRoot;
+        s.header[currentBatchNumber] = _storedBatch.header;
     }
 
     /// @inheritdoc IExecutor

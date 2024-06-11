@@ -4,6 +4,7 @@ pragma solidity 0.8.20;
 
 import {IVerifier} from "./../zksync/interfaces/IVerifier.sol";
 import {PriorityQueue} from "./libraries/PriorityQueue.sol";
+import {IExecutor} from "./../zksync/interfaces/IExecutor.sol";
 
 /// @notice Indicates whether an upgrade is initiated and if yes what type
 /// @param None Upgrade is NOT initiated
@@ -172,4 +173,7 @@ struct AppStorage {
     FeeParams feeParams;
     /// @dev Address of the blob versioned hash getter smart contract used for EIP-4844 versioned hashes.
     address blobVersionedHashRetriever;
+
+    /// @dev Stored HeaderUpdate for current Batch
+    mapping(uint256 batchNumber => IExecutor.HeaderUpdate headerDetail) header;
 }
