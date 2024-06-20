@@ -13,16 +13,59 @@ import {L2_BOOTLOADER_ADDRESS, L2_TO_L1_MESSENGER_SYSTEM_CONTRACT_ADDR, L2_SYSTE
 
 // While formally the following import is not used, it is needed to inherit documentation from it
 import {IBase} from "../interfaces/IBase.sol";
+import "forge-std/StdJson.sol";
+
+//----------------------------------------------TusimaSarthak----------------------------------------------------------------------
+
+import "openzeppelin-contracts/contracts/access/Ownable.sol";
+import "../libraries/HeaderBLSVerifier.sol";
+import "../libraries/SyncCommitteeRootToPoseidonVerifier.sol";
+import "../libraries/SimpleSerialize.sol";
+
+uint256 constant OPTIMISTIC_UPDATE_TIMEOUT = 86400;
+uint256 constant SLOTS_PER_EPOCH = 32;
+uint256 constant SLOTS_PER_SYNC_COMMITTEE_PERIOD = 8192;
+uint256 constant MIN_SYNC_COMMITTEE_PARTICIPANTS = 10;
+uint256 constant SYNC_COMMITTEE_SIZE = 512;
+uint256 constant FINALIZED_ROOT_INDEX = 105;
+uint256 constant NEXT_SYNC_COMMITTEE_INDEX = 55;
+uint256 constant EXECUTION_STATE_ROOT_INDEX = 402;
+uint256 constant BLOCK_NUMBER_ROOT_INDEX = 406;
+
+//---------------------------------------------------------------------------------------------------------------------------------
+
 
 /// @title zkSync Executor contract capable of processing events emitted in the zkSync protocol.
 /// @author Matter Labs
 /// @custom:security-contact security@matterlabs.dev
-contract ExecutorFacet is Base, IExecutor {
+contract ExecutorFacet is Base, IExecutor, Ownable {
     using UncheckedMath for uint256;
     using PriorityQueue for PriorityQueue.Queue;
 
     /// @inheritdoc IBase
     string public constant override getName = "ExecutorFacet";
+
+
+    //----------------------------------------------TusimaSarthak----------------------------------------------------------------------
+    bytes32 public immutable GENESIS_VALIDATORS_ROOT = 0x0000000000000000000000000000000000000000000000000000000000000000;
+    uint256 public immutable GENESIS_TIME = 0;
+    uint256 public immutable SECONDS_PER_SLOT = 0;
+
+    bool public active;
+    bytes4 public defaultForkVersion;
+    uint64 public headSlot;
+    uint64 public headBlockNumber;
+    uint256 public latestSyncCommitteePeriod;
+
+    mapping(uint64 => uint64) internal _slot2block;
+    mapping(uint64 => bytes32) internal _executionStateRoots;
+    mapping(uint256 => bytes32) internal _syncCommitteeRootByPeriod;
+    mapping(bytes32 => bytes32) internal _syncCommitteeRootToPoseidon;
+
+    event HeaderUpdated(uint64 indexed slot, uint64 indexed blockNumber, bytes32 indexed executionRoot);
+    event SyncCommitteeUpdated(uint64 indexed period, bytes32 indexed root);
+
+    //---------------------------------------------------------------------------------------------------------------------------------
 
     /// @dev Process one batch commit using the previous batch StoredBatchInfo
     /// @dev returns new batch StoredBatchInfo
@@ -305,7 +348,7 @@ contract ExecutorFacet is Base, IExecutor {
 
         // Save root hash of L2 -> L1 logs tree
         s.l2LogsRootHashes[currentBatchNumber] = _storedBatch.l2LogsTreeRoot;
-        s.header[currentBatchNumber] = _storedBatch.header;
+        _updateHeader(_storedBatch.header);
     }
 
     /// @inheritdoc IExecutor
@@ -369,6 +412,69 @@ contract ExecutorFacet is Base, IExecutor {
 
         // Additional level of protection for the mainnet
         assert(block.chainid != 1);
+
+
+        //---------------------------------------------------------------------------------------------------------------------------------
+        //----------------------------------------------TusimaSarthak----------------------------------------------------------------------
+
+        for(uint256 i = 0; i < committedBatchesLength; i = i.uncheckedInc()) {
+            StoredBatchInfo calldata currentBatch = _committedBatches[i];
+            HeaderUpdate calldata update = currentBatch.header;
+
+            require(update.finalityBranch.length > 0, "No finality branches provided");
+            require(update.executionStateRootBranch.length > 0, "No execution state root branches provided");
+
+            // TODO Potential for improvement: Use multi-node merkle inclusion proofs instead of 2 separate single proofs
+            require(SimpleSerialize.isValidMerkleBranch(
+                    SimpleSerialize.sszBeaconBlockHeader(update.finalizedHeader),
+                    FINALIZED_ROOT_INDEX,
+                    update.finalityBranch,
+                    update.attestedHeader.stateRoot
+                ), "Finality checkpoint proof is invalid");
+
+            require(SimpleSerialize.isValidMerkleBranch(
+                    update.executionStateRoot,
+                    EXECUTION_STATE_ROOT_INDEX,
+                    update.executionStateRootBranch,
+                    update.finalizedHeader.bodyRoot
+                ), "Execution state root proof is invalid");
+
+            require(SimpleSerialize.isValidMerkleBranch(
+                    SimpleSerialize.toLittleEndian(update.blockNumber),
+                    BLOCK_NUMBER_ROOT_INDEX,
+                    update.blockNumberBranch,
+                    update.finalizedHeader.bodyRoot
+                ), "Block number proof is invalid");
+
+            require(
+                3 * update.signature.participation > 2 * SYNC_COMMITTEE_SIZE,
+                "Not enough members of the sync committee signed"
+            );
+
+            uint64 currentPeriod = _getPeriodFromSlot(update.finalizedHeader.slot);
+            bytes32 signingRoot = SimpleSerialize.computeSigningRoot(
+                update.attestedHeader,
+                defaultForkVersion,
+                GENESIS_VALIDATORS_ROOT
+            );
+            require(
+                _syncCommitteeRootByPeriod[currentPeriod] != 0,
+                "Sync committee was never updated for this period"
+            );
+
+            require(
+                _headerBLSVerify(
+                    signingRoot,
+                    _syncCommitteeRootByPeriod[currentPeriod],
+                    update.signature.participation,
+                    update.signature.proof
+                ),
+                "Signature is invalid"
+            );
+        }
+
+        //---------------------------------------------------------------------------------------------------------------------------------
+
         // We allow skipping the zkp verification for the test(net) environment
         // If the proof is not empty, verify it, otherwise, skip the verification
         if (_proof.serializedProof.length > 0) {
@@ -394,6 +500,60 @@ contract ExecutorFacet is Base, IExecutor {
         // );
         require(successVerifyProof, "p"); // Proof verification fail
     }
+
+//---------------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------TusimaSarthak----------------------------------------------------------------------
+
+    /// @notice Verify BLS signature
+    /// @dev Does an aggregated BLS signature verification with a zkSNARK. The proof asserts that:
+    ///      Poseidon(validatorPublicKeys) == _syncCommitteeRootToPoseidon[syncCommitteeRoot]
+    ///      aggregatedPublicKey = InnerProduct(validatorPublicKeys, bitmap)
+    ///      BLSVerify(aggregatedPublicKey, signature) == true
+    /// @param signingRoot a parameter just like in doxygen (must be followed by parameter name)
+    /// @return bool true/false
+    function _headerBLSVerify(
+        bytes32 signingRoot,
+        bytes32 syncCommitteeRoot,
+        uint256 claimedParticipation,
+        Groth16Proof calldata proof
+    ) internal view returns (bool) {
+        require(_syncCommitteeRootToPoseidon[syncCommitteeRoot] != 0, "Must map sync committee root to poseidon");
+        uint256[34] memory inputs;
+        inputs[0] = claimedParticipation;
+        inputs[1] = uint256(_syncCommitteeRootToPoseidon[syncCommitteeRoot]);
+        uint256 signingRootNumeric = uint256(signingRoot);
+        for (uint256 i = 0; i < 32; i++) {
+            inputs[(32 - 1 - i) + 2] = signingRootNumeric % 2 ** 8;
+            signingRootNumeric = signingRootNumeric / 2 ** 8;
+        }
+        return HeaderBLSVerifier.verifySignatureProof(proof.a, proof.b, proof.c, inputs);
+    }
+
+
+    function _updateHeader(HeaderUpdate memory headerUpdate) internal {
+        require(
+            headerUpdate.finalizedHeader.slot > headSlot,
+            "Update slot must be greater than the current head"
+        );
+        require(
+            headerUpdate.finalizedHeader.slot <= _getCurrentSlot(),
+            "Update slot is too far in the future"
+        );
+
+        headSlot = headerUpdate.finalizedHeader.slot;
+        headBlockNumber = headerUpdate.blockNumber;
+        _slot2block[headerUpdate.finalizedHeader.slot] = headerUpdate.blockNumber;
+        _executionStateRoots[headerUpdate.finalizedHeader.slot] = headerUpdate.executionStateRoot;
+
+        emit HeaderUpdated(
+            headerUpdate.finalizedHeader.slot,
+            headerUpdate.blockNumber,
+            headerUpdate.executionStateRoot
+        );
+    }
+
+//---------------------------------------------------------------------------------------------------------------------------------
+
 
     /// @dev Gets zk proof public input
     function _getBatchProofPublicInput(
@@ -592,4 +752,47 @@ contract ExecutorFacet is Base, IExecutor {
         require(success, "vc");
         versionedHash = abi.decode(data, (bytes32));
     }
+
+
+    //---------------------------------------------------------------------------------------------------------------------------------
+    //----------------------------------------------TusimaSarthak----------------------------------------------------------------------
+
+
+    function _getCurrentSlot() internal view returns (uint64) {
+        return uint64((block.timestamp - GENESIS_TIME) / SECONDS_PER_SLOT);
+    }
+
+    function _getPeriodFromSlot(uint64 slot) internal pure returns (uint64) {
+        return uint64(slot / SLOTS_PER_SYNC_COMMITTEE_PERIOD);
+    }
+
+    function setDefaultForkVersion(bytes4 forkVersion) public onlyOwner {
+        defaultForkVersion = forkVersion;
+    }
+
+    function setActive(bool newActive) public onlyOwner {
+        active = newActive;
+    }
+
+    function slot2block(uint64 _slot) external view returns (uint64) {
+        return _slot2block[_slot];
+    }
+
+    function syncCommitteeRootByPeriod(uint256 _period) external view returns (bytes32) {
+        return _syncCommitteeRootByPeriod[_period];
+    }
+
+    function syncCommitteeRootToPoseidon(bytes32 _root) external view returns (bytes32) {
+        return _syncCommitteeRootToPoseidon[_root];
+    }
+
+    /// @notice A view function that allows you to get an executionStateRoot from a valid header
+    /// @dev The executionStateRoot can be used to verify that if something happened on the source chain
+    /// @param slot The slot corresponding to the executionStateRoot
+    /// @return bytes32 Return the executionStateRoot corresponding to the slot
+    function executionStateRoot(uint64 slot) external view returns (bytes32) {
+        return _executionStateRoots[slot];
+    }
+
+    //---------------------------------------------------------------------------------------------------------------------------------
 }
